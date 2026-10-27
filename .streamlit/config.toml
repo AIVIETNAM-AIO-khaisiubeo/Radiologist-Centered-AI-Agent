@@ -1,0 +1,15 @@
+# Calm, high-contrast light theme for the reading interface (see docs/UX_DESIGN.md).
+# Deep navy text, soft-teal actions on a white page; every text/background pair meets WCAG AA.
+[theme]
+base = "light"
+primaryColor = "#163A66"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F3F7F9"
+textColor = "#16324F"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"
+
+[browser]
+gatherUsageStats = false
