@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+data/
+outputs/*/cache/train_slices/
+outputs/*/feedback/
+outputs/*/model/*.pt
+checkpoints/*.pt
+*.zip
+.DS_Store

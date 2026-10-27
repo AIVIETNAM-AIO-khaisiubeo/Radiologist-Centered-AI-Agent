@@ -1,0 +1,7 @@
+# The segmentation model: NVIDIA VISTA3D via MONAI, weights from Hugging Face (MONAI/VISTA3D-HF).
+# Colab already ships torch. A GPU is recommended (~15-60 s per CT on a T4; several minutes on a CPU).
+torch>=2.1
+monai>=1.4
+einops>=0.7
+safetensors>=0.4
+huggingface_hub>=0.25

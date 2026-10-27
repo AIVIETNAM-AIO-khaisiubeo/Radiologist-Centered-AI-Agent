@@ -1,0 +1,13 @@
+# Core pipeline + review website (no GPU needed to *view* a finished LiTS run)
+numpy>=1.24
+scipy>=1.10
+pandas>=2.0
+scikit-learn>=1.3
+matplotlib>=3.7
+opencv-python-headless>=4.8
+nibabel>=5.1
+pyyaml>=6.0
+requests>=2.31
+pillow>=10.0
+kagglehub>=0.3.4          # downloads the two LiTS17 Kaggle datasets
+streamlit>=1.59              # accessible segmented controls (radio semantics), AppTest support
