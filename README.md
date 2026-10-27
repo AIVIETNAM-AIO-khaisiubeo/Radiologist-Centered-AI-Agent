@@ -1,4 +1,4 @@
-# ReaderAdapt-Liver: A self-adapting, radiologist-centred first-read agent for liver CT
+# ReaderAdapt-Liver: A self-adapting, radiologist-centred first-read agent for Liver CT Segmentation 
 
 > Research question of the project: *can an AI assistant adapt to the individual radiologist, rather than
 > offering the same support to every reader?*
