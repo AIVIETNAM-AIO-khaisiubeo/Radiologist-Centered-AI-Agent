@@ -1,6 +1,6 @@
 # ReaderAdapt-Liver: A self-adapting, radiologist-centred first-read agent for Liver CT Segmentation 
 
-> Research question of the project: *can an AI assistant adapt to the individual radiologist, rather than
+> Research Question: *can an AI assistant adapt to the individual radiologist, rather than
 > offering the same support to every reader?*
 
 The agent performs the routine part of a read on **real liver CT (LiTS17)** - it **triages the worklist, segments
@@ -11,9 +11,7 @@ suggestion. Those actions are logged and used to learn **how each reader uses th
 its suggestion threshold and **defer** cases to an independent read for readers (and cases) where its help would do
 more harm than good.
 
-> ⚠️ **Research prototype - not for clinical use.** Public, de-identified data only. Simulated readers show that
-> the method behaves as designed; they are not evidence of clinical benefit.
-
+> ⚠️ **Research prototype - not for clinical use.**
 
 
 ## Contents
