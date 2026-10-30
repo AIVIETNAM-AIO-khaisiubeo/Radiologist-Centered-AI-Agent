@@ -1,7 +1,5 @@
 # UX Design — Radiologist Reading Interface
 
-The interface supports radiologists reviewing liver CT cases with AI-assisted segmentation and case-level evidence. Its priorities are independent clinical judgement, transparent limitations, recoverable work, and an auditable record.
-
 > **Research prototype — not for clinical use.** Model outputs, measurements, probabilities, priorities, and report drafts are not validated for patient-care decisions. The radiologist remains responsible for interpreting the CT.
 
 ## Users and context
