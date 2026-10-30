@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+<title id="title">Radiologist-Centered AI Agent: system architecture</title>
+<desc id="desc">Research architecture showing CT input through VISTA3D segmentation, measurements, quality control, calibrated confidence, triage and reader policy, report drafting, radiologist interface, audited feedback and offline policy evaluation. LiTS reference masks feed only research evaluation.</desc>
+<defs>
+  <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#536579"/></marker>
+  <marker id="dasharrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#8B6BB1"/></marker>
+  <style>
+    text{font-family:Inter,Arial,sans-serif;fill:#172B4D}
+    .title{font-size:30px;font-weight:700;letter-spacing:.2px}
+    .subtitle{font-size:16px;fill:#536579}
+    .section{font-size:17px;font-weight:700;letter-spacing:1.1px;fill:#43566D}
+    .head{font-size:18px;font-weight:700}
+    .body{font-size:15px;fill:#34465B}
+    .small{font-size:13px;fill:#52657A}
+    .node{stroke-width:1.6;rx:12}
+    .data{fill:#F0F5FA;stroke:#7792AC}
+    .model{fill:#E8F3F1;stroke:#4F9388}
+    .process{fill:#EDF2FC;stroke:#6D8DC7}
+    .control{fill:#FFF3DF;stroke:#C99A48}
+    .human{fill:#F1EAF8;stroke:#9A7BBC}
+    .audit{fill:#F5F0FA;stroke:#A18ABF}
+    .line{fill:none;stroke:#536579;stroke-width:2.2;marker-end:url(#arrow)}
+    .feedback{fill:none;stroke:#8B6BB1;stroke-width:2.2;stroke-dasharray:8 6;marker-end:url(#dasharrow)}
+    .divider{stroke:#D7E0E9;stroke-width:1}
+  </style>
+</defs>
+<rect width="1600" height="1120" fill="#FFFFFF"/>
+<text x="70" y="58" class="title">Radiologist-Centered AI Agent</text>
+<text x="70" y="87" class="subtitle">Reader-adaptive, uncertainty-aware first-read support for liver CT · System architecture</text>
+<line x1="70" y1="108" x2="1530" y2="108" class="divider"/>
+
+<!-- Data and model -->
+<text x="70" y="145" class="section">A  INPUT &amp; PERCEPTION</text>
+<rect x="70" y="170" width="250" height="105" class="node data"/>
+<text x="195" y="202" text-anchor="middle" class="head">CT study</text>
+<text x="195" y="228" text-anchor="middle" class="body">NIfTI volume + voxel geometry</text>
+<text x="195" y="250" text-anchor="middle" class="small">LiTS17 research dataset</text>
+<path d="M320 222 H365" class="line"/>
+<rect x="370" y="170" width="290" height="105" class="node model"/>
+<text x="515" y="202" text-anchor="middle" class="head">VISTA3D</text>
+<text x="515" y="228" text-anchor="middle" class="body">Pretrained 3D segmentation</text>
+<text x="515" y="250" text-anchor="middle" class="small">Liver + candidate tumour masks</text>
+<path d="M660 222 H705" class="line"/>
+<rect x="710" y="170" width="290" height="105" class="node process"/>
+<text x="855" y="202" text-anchor="middle" class="head">Geometry-aware measurements</text>
+<text x="855" y="228" text-anchor="middle" class="body">Volumes · diameters · locations</text>
+<text x="855" y="250" text-anchor="middle" class="small">Mapped to original image resolution</text>
+<path d="M1000 222 H1045" class="line"/>
+<rect x="1050" y="170" width="250" height="105" class="node process"/>
+<text x="1175" y="202" text-anchor="middle" class="head">Quality control</text>
+<text x="1175" y="228" text-anchor="middle" class="body">Plausibility + geometry checks</text>
+<text x="1175" y="250" text-anchor="middle" class="small">Failures remain explicit</text>
+<path d="M1300 222 H1340 V332 H1310" class="line"/>
+<rect x="1050" y="300" width="260" height="95" class="node process"/>
+<text x="1180" y="331" text-anchor="middle" class="head">Confidence estimation</text>
+<text x="1180" y="356" text-anchor="middle" class="body">Calibrated case probability</text>
+<text x="1180" y="377" text-anchor="middle" class="small">Uncertainty + disagreement signals</text>
+
+<!-- Orchestration -->
+<text x="70" y="330" class="section">B  GUARDED AGENT ORCHESTRATION</text>
+<rect x="70" y="355" width="245" height="120" class="node control"/>
+<text x="192" y="386" text-anchor="middle" class="head">Planner</text>
+<text x="192" y="412" text-anchor="middle" class="body">Deterministic rules (default)</text>
+<text x="192" y="434" text-anchor="middle" class="body">Optional LLM tool proposal</text>
+<text x="192" y="456" text-anchor="middle" class="small">No direct CT-pixel interpretation</text>
+<path d="M315 415 H365" class="line"/>
+<rect x="370" y="355" width="280" height="120" class="node control"/>
+<text x="510" y="386" text-anchor="middle" class="head">Guarded tool runner</text>
+<text x="510" y="412" text-anchor="middle" class="body">Order + precondition validation</text>
+<text x="510" y="434" text-anchor="middle" class="body">Fallback on invalid proposals</text>
+<text x="510" y="456" text-anchor="middle" class="small">Trace, timing and overrides recorded</text>
+<path d="M650 415 H700" class="line"/>
+<rect x="705" y="355" width="295" height="120" class="node process"/>
+<text x="852" y="386" text-anchor="middle" class="head">Triage + reader policy</text>
+<text x="852" y="412" text-anchor="middle" class="body">Priority categories + thresholds</text>
+<text x="852" y="434" text-anchor="middle" class="body">Suggest, or explicitly defer</text>
+<text x="852" y="456" text-anchor="middle" class="small">QC failure / uncertainty can trigger review</text>
+<path d="M1000 415 H1050" class="line"/>
+<rect x="1055" y="420" width="255" height="100" class="node process"/>
+<text x="1182" y="452" text-anchor="middle" class="head">Structured report draft</text>
+<text x="1182" y="477" text-anchor="middle" class="body">Template-based, reproducible output</text>
+<text x="1182" y="499" text-anchor="middle" class="small">No autonomous diagnosis or sign-off</text>
+<!-- confidence into triage -->
+<path d="M1180 395 V407 H1000" class="line"/>
+
+<!-- Human interface -->
+<text x="70" y="555" class="section">C  HUMAN REVIEW &amp; AUDIT</text>
+<rect x="70" y="580" width="290" height="125" class="node human"/>
+<text x="215" y="612" text-anchor="middle" class="head">Streamlit reading interface</text>
+<text x="215" y="638" text-anchor="middle" class="body">Worklist · CT viewer · overlays</text>
+<text x="215" y="660" text-anchor="middle" class="body">Evidence revealed after blind read</text>
+<text x="215" y="682" text-anchor="middle" class="small">Status, uncertainty and provenance</text>
+<path d="M1182 520 V548 H215 V575" class="line"/>
+<rect x="410" y="580" width="280" height="125" class="node human"/>
+<text x="550" y="612" text-anchor="middle" class="head">Radiologist decision</text>
+<text x="550" y="638" text-anchor="middle" class="body">Accept · edit · reject · defer</text>
+<text x="550" y="660" text-anchor="middle" class="body">Independent clinical interpretation</text>
+<text x="550" y="682" text-anchor="middle" class="small">Human retains final responsibility</text>
+<path d="M360 642 H405" class="line"/>
+<rect x="740" y="580" width="300" height="125" class="node audit"/>
+<text x="890" y="612" text-anchor="middle" class="head">Versioned audit trail</text>
+<text x="890" y="638" text-anchor="middle" class="body">Impression + revisions + feedback</text>
+<text x="890" y="660" text-anchor="middle" class="body">Session / model / policy versions</text>
+<text x="890" y="682" text-anchor="middle" class="small">Decision provenance preserved</text>
+<path d="M690 642 H735" class="line"/>
+<rect x="1090" y="580" width="350" height="125" class="node audit"/>
+<text x="1265" y="612" text-anchor="middle" class="head">Offline policy evaluation</text>
+<text x="1265" y="638" text-anchor="middle" class="body">Simulated reader profiles + held-out cases</text>
+<text x="1265" y="660" text-anchor="middle" class="body">Benefit · errors · deferral · review burden</text>
+<text x="1265" y="682" text-anchor="middle" class="small">Research analysis; not a clinical study</text>
+<path d="M1040 642 H1085" class="line"/>
+<path d="M890 705 V755 H852 V480" class="feedback"/>
+<text x="925" y="741" class="small" fill="#8B6BB1">Authorised policy update for a future session</text>
+
+<!-- Evaluation-only reference path -->
+<rect x="70" y="790" width="360" height="90" class="node data"/>
+<text x="250" y="822" text-anchor="middle" class="head">Reference annotations</text>
+<text x="250" y="847" text-anchor="middle" class="body">LiTS masks · research ground truth</text>
+<text x="250" y="866" text-anchor="middle" class="small">Kept outside runtime planning</text>
+<path d="M430 835 H500" class="feedback"/>
+<rect x="505" y="790" width="535" height="90" class="node audit"/>
+<text x="772" y="822" text-anchor="middle" class="head">Research-only metrics</text>
+<text x="772" y="847" text-anchor="middle" class="body">Segmentation · calibration · triage · policy outcomes</text>
+<text x="772" y="866" text-anchor="middle" class="small">Offline comparison against reference annotations</text>
+<path d="M1040 835 H1265 V710" class="feedback"/>
+<text x="1080" y="822" class="small">evaluation only</text>
+
+<!-- Legend and caveat -->
+<line x1="70" y1="925" x2="1530" y2="925" class="divider"/>
+<text x="70" y="960" class="section">LEGEND</text>
+<rect x="70" y="980" width="22" height="16" rx="4" class="data"/><text x="102" y="993" class="small">Data / input</text>
+<rect x="240" y="980" width="22" height="16" rx="4" class="model"/><text x="272" y="993" class="small">Pretrained model</text>
+<rect x="450" y="980" width="22" height="16" rx="4" class="process"/><text x="482" y="993" class="small">Analysis tools</text>
+<rect x="630" y="980" width="22" height="16" rx="4" class="control"/><text x="662" y="993" class="small">Agent control / guardrails</text>
+<rect x="900" y="980" width="22" height="16" rx="4" class="human"/><text x="932" y="993" class="small">Human review</text>
+<path d="M1110 988 H1160" class="feedback"/><text x="1172" y="993" class="small">Offline feedback / evaluation path</text>
+<text x="70" y="1040" class="body" font-weight="700">Research prototype — not for clinical use.</text>
+<text x="70" y="1065" class="small">VISTA3D is used as a pretrained segmenter; the project adapts decision policies, not neural-network weights.</text>
+<text x="70" y="1087" class="small">Optional vision-language second reader is disabled by default. All AI outputs require independent human interpretation.</text>
+</svg>
