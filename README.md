@@ -58,25 +58,12 @@ An optional vision-language second-reader adapter is available for experiments, 
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    A[LiTS17 CT volume<br/>NIfTI + voxel geometry] --> B[Load and canonicalise study]
-    B --> C[VISTA3D segmentation<br/>liver + hepatic tumour]
-    C --> D[Measurements at original resolution]
-    D --> E[Automatic quality control]
-    E --> F[Calibrated case probability<br/>+ uncertainty]
-    V[Optional second-reader plugin<br/>disabled by default] -. optional .-> F
-    F --> G[Worklist triage]
-    E --> G
-    G --> H[Reader-specific policy<br/>suggest or defer]
-    H --> I[Template-based report draft]
-    I --> J[Streamlit review interface]
-    J --> K[Independent impression<br/>and final reader decision]
-    K --> L[Versioned feedback + audit log]
-    L --> M[Offline reader-policy fitting<br/>and simulated evaluation]
-    M -. authorised policy<br/>for a future session .-> H
-    R[LiTS reference masks] -. research evaluation only .-> M
-```
+The figure summarises the end-to-end system: pretrained CT perception, guarded agent orchestration, reader-facing decision support, and an offline feedback/evaluation loop. Solid arrows show the main runtime workflow; dashed arrows denote offline feedback or research-only evaluation. Reference annotations are isolated from runtime planning.
+
+<div align="center">
+  <img src="docs/figures/agentic_architecture.svg" alt="Scholarly system architecture of the Radiologist-Centered AI Agent, from CT input and VISTA3D segmentation through guarded tool orchestration, uncertainty-aware triage, radiologist review, audit logging, and offline policy evaluation." width="100%" />
+  <p><em>Figure 1. Overall architecture of the reader-adaptive, uncertainty-aware liver CT research prototype.</em></p>
+</div>
 
 ### Core design principles
 
