@@ -60,10 +60,6 @@ An optional vision-language second-reader adapter is available for experiments, 
 
 The figure summarises the end-to-end system: pretrained CT perception, guarded agent orchestration, reader-facing decision support, and an offline feedback/evaluation loop. Solid arrows show the main runtime workflow; dashed arrows denote offline feedback or research-only evaluation. Reference annotations are isolated from runtime planning.
 
-<div align="center">
-  <img src="docs/figures/agentic_architecture.svg" alt="Scholarly system architecture of the Radiologist-Centered AI Agent, from CT input and VISTA3D segmentation through guarded tool orchestration, uncertainty-aware triage, radiologist review, audit logging, and offline policy evaluation." width="100%" />
-  <p><em>Figure 1. Overall architecture of the reader-adaptive, uncertainty-aware liver CT research prototype.</em></p>
-</div>
 
 ### Core design principles
 
