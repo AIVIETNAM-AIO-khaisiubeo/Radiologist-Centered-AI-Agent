@@ -11,7 +11,7 @@
 
 **Can an AI assistant adapt to how an individual radiologist uses AI, while recognising when it should defer?**
 
-A research prototype that connects pretrained 3D CT segmentation, original-resolution measurements, calibrated case-level confidence, transparent worklist triage, reader-specific decision policies, and an auditable review interface.
+A design prototype that connects pretrained 3D CT segmentation, calibrated case-level confidence, transparent worklist triage, reader-specific decision policies, and an auditable review interface.
 
 [Architecture](#architecture) · [Workflow](#end-to-end-workflow) · [Setup](#setup-and-running) · [Evaluation](#evaluation-design) · [Limitations](#limitations-and-intended-use)
 
