@@ -33,7 +33,6 @@ A design prototype that connects pretrained 3D CT segmentation, calibrated case-
 
 - [Project overview](#project-overview)
 - [Research questions](#research-questions)
-- [Architecture](#architecture)
 - [End-to-end workflow](#end-to-end-workflow)
 - [Research methods](#research-methods)
 - [Dataset and label conventions](#dataset-and-label-conventions)
@@ -81,22 +80,7 @@ The questions below follow **Q1–Q4 of AIMA Project II**, as framed in the repo
 
 The research emphasis is **human–AI complementarity**: the downstream outcome is the **reader's final decision**, not merely VISTA3D segmentation accuracy. The report provides the mathematical assumptions, policy descriptions and scientific framing; the code is a prototype implementation, **not an independent clinical study or a set of validated experimental results**.
 
-## Architecture
 
-The figure summarises the end-to-end system: pretrained CT perception, guarded agent orchestration, reader-facing decision support, and an offline feedback/evaluation loop. Solid arrows show the main runtime workflow; dashed arrows denote offline feedback or research-only evaluation. Reference annotations are isolated from runtime planning.
-
-![Architecture of the radiologist-centred AI agent](docs/figures/agentic_architecture.svg)
-
-The research-layer dependency is: **calibrated case probability and uncertainty → reader feedback / behavioural estimation → expected-loss policy optimisation → reader-facing SHOW or DEFER → controlled human–AI comparison**. In particular, **DEFER means withholding the AI suggestion while the same reader interprets the case independently**; it does *not* mean autonomous clinical action, a physician-to-physician referral, or training a new model.
-
-### Core design principles
-
-- **The model computes; the planner coordinates.** The deterministic rule planner is the default. An optional open LLM can propose the next tool through an OpenAI-compatible endpoint, but it receives tool descriptions and summaries—not CT pixels—and does not write findings. The runner validates tool order and preconditions; invalid proposals fall back to the rule planner and are recorded in the trace.
-- **Measurements preserve physical geometry.** NIfTI orientation and header spacing are carried through processing. Volumes and diameters are computed using the original image resolution and voxel spacing rather than treating resized model pixels as physical measurements.
-- **Uncertainty and validity are separate.** Flip-based test-time augmentation provides a pass-disagreement signal; predictive entropy describes case-level uncertainty. Independent quality checks can still fail even when a prediction appears confident.
-- **Deferral is an explicit outcome.** Quality-control failures and sufficiently uncertain cases can have their AI suggestion withheld so the case receives an independent read.
-- **Adaptation is governed, not silent.** Proposed policies are versioned and logged. The interface requires an attributed authorisation before a learned policy is activated, and it applies from the next session rather than changing the rules mid-session.
-- **Every reader decision is auditable.** The impression is saved before AI evidence is revealed in the default blind-first-read mode. Revisions retain the earlier decision and record what they supersede.
 
 ## End-to-end workflow
 
