@@ -38,7 +38,6 @@ A design prototype that connects pretrained 3D CT segmentation, calibrated case-
 - [Setup and running](#setup-and-running)
 - [Outputs and artifacts](#outputs-and-artifacts)
 - [Configuration](#configuration)
-- [Evaluation design](#evaluation-design)
 - [Tests](#tests)
 - [Limitations and intended use](#limitations-and-intended-use)
 - [References and licences](#references-and-licences)
@@ -321,44 +320,6 @@ The default experiment is defined in [`configs/lits.yaml`](configs/lits.yaml), w
 
 The YAML file only needs to override selected defaults. For reproducibility, pin `segmenter.hf_revision` to a specific Hugging Face revision when preparing a formal experiment, record the effective `config_used.yaml`, and retain the generated model card and run metadata.
 
-## Evaluation design
-
-The report's **four primary policy arms** address the incremental scientific questions. The implementation includes a **fifth supplementary comparator** to isolate the role of universal deferral:
-
-| Policy | Suggestion threshold | Deferral rule | Purpose |
-|---|---|---|---|
-| `no_ai` | No AI suggestion | Independent reader interpretation | Human-only control |
-| `universal` | Shared `t=0.5` | QC failure only | Non-personalised AI baseline |
-| `reader_threshold` | Fitted per reader | QC failure only | Is personalised suggestion alone useful? |
-| `reader_threshold_defer` | Fitted per reader | QC + personalised entropy cut-off | Does reader-specific deferral add value? |
-| `universal_defer` | Shared `t=0.5` | QC + pooled-feedback entropy cut-off | **Supplementary code arm**, beyond the four primary arms in the report |
-
-**Primary paired comparisons:** `no_ai → universal` (overall effect of AI), `universal → reader_threshold` (personalisation), and `reader_threshold → reader_threshold_defer` (incremental value of deferral). `universal_defer` tests whether any benefit arises from **deferral itself** rather than personalising it.
-
-### Metrics and research endpoints
-
-The central endpoint is the **simulated reader's final decision**, `f_ir`, relative to LiTS reference tumour presence `g_i`:
-
-| Metric | Definition / interpretation |
-|---|---|
-| **Final reader accuracy** | `mean(1[f_ir = g_i])`; complemented by sensitivity and specificity |
-| **Weighted error** | `mean(2*FN + FP)` per case, using the same loss weights as policy fitting |
-| **Harmful acceptance rate (HAR)** | `#(shown incorrect AI suggestions accepted as the final label) / #all test cases` |
-| **Over-reliance** | `#(shown incorrect AI suggestions accepted) / #(shown incorrect AI suggestions)` |
-| **Deferral rate** | `#cases where the AI recommendation was withheld / #test cases` |
-| **Per-reader AI benefit** | `accuracy(reader, policy) - accuracy(reader, no_ai)` |
-| **Between-reader benefit spread** | `max_r(mean_seed benefit_r) - min_r(mean_seed benefit_r)` |
-| **Review burden** | Mean nominal action cost per case; **not measured elapsed reading time** |
-
-For **Q2**, HAR and over-reliance should be interpreted **together with accuracy and deferral**: suppressing every suggestion can trivially reduce exposure to incorrect advice while also foregoing helpful advice. Over-reliance is undefined when **no incorrect suggestion is displayed**. For **Q1**, a smaller benefit spread is meaningful only in the context of non-worsening overall reader benefit and error. For **Q3**, report learning curves against the actual feedback count and rates of adopting a personalised policy. **Q4 still requires a pilot with real radiologists**.
-
-Additional assessments cover segmentation Dice / measurements, case-level calibration (Brier, NLL, ECE, AUROC, reliability diagrams and bootstrap uncertainty), selective prediction / coverage, and rule-based worklist triage. They are useful **supporting diagnostics**, not substitutes for the human–AI endpoints.
-
-**Evidence status:** This repository contains an experimental design and simulation/evaluation code; neither the report nor this README provides verified numeric outcomes for Q1–Q4. Do not interpret hypothetical reader profiles, demonstration curves or chosen policy-cost weights as clinical findings. Calibration fitting and reader burn-in operate on `calib`, with comparisons on `test`; this prevents *policy-fitting* leakage between those two splits but **does not address overlap of LiTS with VISTA3D pretraining**.
-
-### Critical evaluation caveat: LiTS overlap with VISTA3D training
-
-VISTA3D's published training sources include MSD Task 03 (Liver), which is built from LiTS training volumes. The 131 LiTS cases used in this project therefore overlap with the model's training data. **LiTS segmentation Dice and case-level AUROC are optimistic and must not be presented as independent, held-out validation of VISTA3D.** The calibration/test split separates this project's calibration and reader-policy analyses, but it does not remove the model's pretraining overlap. An external CT dataset that is disjoint from VISTA3D's training sources is needed to evaluate segmentation generalisation.
 
 ## Tests
 
