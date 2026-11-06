@@ -38,7 +38,6 @@ A design prototype that connects pretrained 3D CT segmentation, calibrated case-
 - [Setup and running](#setup-and-running)
 - [Outputs and artifacts](#outputs-and-artifacts)
 - [Configuration](#configuration)
-- [Tests](#tests)
 - [Limitations and intended use](#limitations-and-intended-use)
 - [References and licences](#references-and-licences)
 
@@ -321,22 +320,6 @@ The default experiment is defined in [`configs/lits.yaml`](configs/lits.yaml), w
 The YAML file only needs to override selected defaults. For reproducibility, pin `segmenter.hf_revision` to a specific Hugging Face revision when preparing a formal experiment, record the effective `config_used.yaml`, and retain the generated model card and run metadata.
 
 
-## Tests
-
-The repository contains synthetic CT phantoms, stand-in segmentation/VLM adapters, core tests, Streamlit interaction tests, and intended end-to-end pipeline tests. The test files cover NIfTI geometry, original-spacing measurements, calibration, agent tool-order guardrails, triage, report generation, feedback persistence, blind-first-read behaviour, policy authorisation, revisions, failure states, and the VISTA3D adapter's geometry/class assembly.
-
-After restoring `radagent.data.lits`, install the development dependency and run:
-
-```bash
-python -m pip install -r requirements-dev.txt
-pytest -q
-```
-
-The missing data-layer module currently prevents the LiTS pipeline test module from importing, so a passing full-suite result cannot be claimed for the current checkout. The core tests can be run separately while that issue is being addressed:
-
-```bash
-pytest -q tests/test_core.py
-```
 
 ## Limitations and intended use
 
