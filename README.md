@@ -2,7 +2,9 @@
 
 # Radiologist-Centered AI Agent
 
-### Reader-adaptive, uncertainty-aware first-read support for liver CT
+### Per-Reader Adaptation · Learning to Defer · Human–AI Evaluation
+
+**Research prototype | Liver CT | Pretrained VISTA3D | Reader-specific decision support**
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
@@ -13,7 +15,9 @@
 
 A design prototype that connects pretrained 3D CT segmentation, calibrated case-level confidence, transparent worklist triage, reader-specific decision policies, and an auditable review interface.
 
-[Architecture](#architecture) · [Workflow](#end-to-end-workflow) · [Setup](#setup-and-running) · [Evaluation](#evaluation-design) · [Limitations](#limitations-and-intended-use)
+**Research report:** [Read *Approaches towards Radiologist-Centered AI Agent* (PDF)](docs/paper/ReaderAdapt-Liver.pdf) · [LaTeX source archive](docs/paper/ReaderAdapt_Liver.zip)
+
+[Research questions](#research-questions) · [Architecture](#architecture) · [Workflow](#end-to-end-workflow) · [Research methods](#research-methods) · [Setup](#setup-and-running) · [Evaluation](#evaluation-design) · [Limitations](#limitations-and-intended-use)
 
 </div>
 
@@ -28,8 +32,10 @@ A design prototype that connects pretrained 3D CT segmentation, calibrated case-
 ## Contents
 
 - [Project overview](#project-overview)
+- [Research questions](#research-questions)
 - [Architecture](#architecture)
 - [End-to-end workflow](#end-to-end-workflow)
+- [Research methods](#research-methods)
 - [Dataset and label conventions](#dataset-and-label-conventions)
 - [Repository map](#repository-map)
 - [Setup and running](#setup-and-running)
@@ -42,13 +48,19 @@ A design prototype that connects pretrained 3D CT segmentation, calibrated case-
 
 ## Project overview
 
-The project explores a **radiologist-centred first-read workflow** on the [Liver Tumor Segmentation Challenge 2017 (LiTS17)](https://www.kaggle.com/datasets/andrewmvd/liver-tumor-segmentation) CT dataset. It is built around three research aims:
+The project explores a **radiologist-centred first-read workflow** on the [Liver Tumor Segmentation Challenge 2017 (LiTS17)](https://www.kaggle.com/datasets/andrewmvd/liver-tumor-segmentation) CT dataset. Its central hypothesis is that the value—and potential harm—of AI assistance depends on **the individual reader's response to the AI**, not simply on the model's standalone accuracy.
 
-| Aim | Question | Main implementation |
+The system has one imaging/agentic foundation and **three connected research directions**, as described in the [24-page project report](docs/paper/ReaderAdapt-Liver.pdf):
+
+| Research direction | Scientific goal | Primary code |
 |---|---|---|
-| **1. Agentic first read** | Can a traceable agent organise a routine first read and prepare evidence for a human reviewer? | `radagent/agent/`, `radagent/pipeline.py`, `radagent/report.py` |
-| **2. Adaptation from reader feedback** | Can suggestion thresholds and deferral behaviour reflect how a particular reader uses AI? | `radagent/policy.py`, `radagent/readers/`, `app/ui_core.py` |
-| **3. Controlled evaluation** | How do universal, reader-specific, and deferral policies compare in a simulated reader study? | `radagent/experiments.py`, `radagent/plots.py`, `notebooks/evaluation.ipynb` |
+| **1. Per-Reader Adaptation** | Learn how a reader responds to AI advice from an independent first read, disagreement events, subsequent decisions, and lapse behaviour. | [`radagent/readers/feedback.py`](radagent/readers/feedback.py), [`radagent/policy.py`](radagent/policy.py), [`app/ui_core.py`](app/ui_core.py) |
+| **2. Learning to Defer** | Select **SHOW** versus **DEFER** and a reader-specific suggestion threshold using quality checks, calibrated uncertainty, behavioural estimates, and expected loss. | [`radagent/policy.py`](radagent/policy.py), [`radagent/confidence.py`](radagent/confidence.py) |
+| **3. Human–AI Evaluation** | Compare no-AI, universal, personalised, and personalised-with-deferral assistance in controlled **simulated-reader** experiments. | [`radagent/experiments.py`](radagent/experiments.py), [`radagent/readers/profiles.py`](radagent/readers/profiles.py), [`radagent/plots.py`](radagent/plots.py) |
+
+These are **not three independently trained AI models**. They form a closed research loop: **reader feedback → behavioural model → reader-specific policy → SHOW/DEFER decision → final reader decision → subsequent feedback**. During a controlled experiment, fitting uses the **calibration split** and testing uses the **held-out test split**; test feedback is *not* fed back into that experiment's policy fit.
+
+**Agentic first-read infrastructure:** `radagent/agent/`, `radagent/pipeline.py`, and `radagent/report.py` coordinate perception, measurements, QC, probability calibration, worklist ranking, guarded policy execution, and deterministic report drafting. This infrastructure supplies evidence to the research loop, rather than constituting a fourth reader-adaptation model.
 
 The segmentation model is **NVIDIA VISTA3D**, loaded from the [MONAI/VISTA3D-HF checkpoint](https://huggingface.co/MONAI/VISTA3D-HF) and used as a pretrained model. **This project does not train or fine-tune the network.** The software measures predicted liver and lesion geometry, estimates case-level tumour probability and uncertainty, checks output plausibility, prioritises the worklist, and drafts a deterministic structured report.
 
@@ -56,10 +68,26 @@ Reader actions—accept, edit, reject, or defer—are logged with the impression
 
 An optional vision-language second-reader adapter is available for experiments, but `vlm.backend` defaults to `none`. In the default configuration, VISTA3D is the only AI model in the pipeline.
 
+## Research questions
+
+The questions below follow **Q1–Q4 of AIMA Project II**, as framed in the report; they are **research questions, not already-established findings**.
+
+| ID | Question | Planned / implemented evidence |
+|---|---|---|
+| **Q1 — Heterogeneous benefit** | Does per-reader adaptation reduce how unevenly different radiologists benefit from AI assistance? | Paired reader-specific benefit relative to `no_ai`; between-reader benefit spread |
+| **Q2 — Harm from incorrect AI** | Does learning to defer reduce harmful acceptance specifically when an incorrect AI recommendation would otherwise be shown? | Harmful acceptance rate, over-reliance, accuracy, weighted error and deferral rate |
+| **Q3 — Feedback efficiency** | How many independent reads / feedback events are needed before a new reader's policy offers stable benefit? | Burn-in / feedback-count learning curves and policy-adoption safeguards |
+| **Q4 — Sim-to-real validity** | Can simulated-reader responses predict how real radiologists would behave in a pilot study? | **Not yet established**; requires real-reader pilot and behavioural-model validation |
+
+The research emphasis is **human–AI complementarity**: the downstream outcome is the **reader's final decision**, not merely VISTA3D segmentation accuracy. The report provides the mathematical assumptions, policy descriptions and scientific framing; the code is a prototype implementation, **not an independent clinical study or a set of validated experimental results**.
+
 ## Architecture
 
 The figure summarises the end-to-end system: pretrained CT perception, guarded agent orchestration, reader-facing decision support, and an offline feedback/evaluation loop. Solid arrows show the main runtime workflow; dashed arrows denote offline feedback or research-only evaluation. Reference annotations are isolated from runtime planning.
 
+![Architecture of the radiologist-centred AI agent](docs/figures/agentic_architecture.svg)
+
+The research-layer dependency is: **calibrated case probability and uncertainty → reader feedback / behavioural estimation → expected-loss policy optimisation → reader-facing SHOW or DEFER → controlled human–AI comparison**. In particular, **DEFER means withholding the AI suggestion while the same reader interprets the case independently**; it does *not* mean autonomous clinical action, a physician-to-physician referral, or training a new model.
 
 ### Core design principles
 
@@ -123,6 +151,97 @@ The Streamlit interface is documented in [`docs/UX_DESIGN.md`](docs/UX_DESIGN.md
 `radagent/policy.py` fits a regularised logistic trust curve and estimates a reader's lapse rate from sequential feedback. Candidate suggestion thresholds and uncertainty cut-offs are evaluated with a weighted loss for false negatives, false positives, and review burden. A reader-specific policy is adopted only when there is enough feedback and its estimated improvement exceeds the configured criteria; otherwise the universal policy remains in place.
 
 `radagent/experiments.py` compares a no-AI control, a universal threshold, universal deferral, a reader-specific threshold, and a reader-specific threshold with deferral. It simulates three reader profiles (over-reliant, sceptical, and inconsistent), uses the same held-out test cases and common random draws for policy comparisons, repeats the study across seeds, and produces learning-curve and benefit-spread analyses.
+
+## Research methods
+
+The methodology below mirrors Sections 3–6 of the [project report](docs/paper/ReaderAdapt-Liver.pdf). Numerical defaults describe the **implemented prototype configuration**; they are **not clinically established thresholds or costs**.
+
+### A. Shared foundation: case-level calibration and uncertainty
+
+VISTA3D produces voxel-wise liver/tumour predictions. `radagent/inference.py` constructs a **case-level raw tumour score** by dilating the predicted liver region, smoothing tumour probabilities and taking a **top-k mean** corresponding to approximately **0.1 mL** of high-scoring candidate tumour tissue. This raw score can rank cases but must **not** be interpreted as a calibrated probability.
+
+Let `s` be the clipped raw score and `z = logit(s)`. `radagent/calibration.py` compares:
+
+| Calibrator | Case-level probability | Function |
+|---|---|---|
+| Identity | `p = s` | Uncorrected baseline |
+| Temperature scaling | `p = sigmoid(z / T)` | Adjusts probability sharpness |
+| Platt scaling | `p = sigmoid(a·z + b)` | Adjusts both sharpness and offset |
+
+The automatic selection procedure uses **stratified cross-validation** (up to five folds) on the calibration split, comparing **negative log-likelihood (NLL)** and refitting the selected mapping on all calibration cases. The Platt fit has a small regularisation term to limit unstable estimates on a small sample. Brier score, NLL, ECE (uniform/equal-frequency bins), AUROC, reliability diagrams and bootstrap intervals complement this analysis.
+
+For a calibrated tumour probability `p`, the case-level **binary predictive entropy** in bits is
+
+`u = -p·log2(p) - (1-p)·log2(1-p)`.
+
+It reaches its maximum of **1 bit at p = 0.5** and decreases as the model becomes more confident. The optional flipped-input pass also provides a disagreement signal, but this is **not a full Bayesian uncertainty model**; low entropy does **not** guarantee that an AI prediction is correct. Independent QC takes precedence over uncertainty.
+
+### B. Per-Reader Adaptation: modelling observed trust
+
+The interface's sequential **blind-first-read** protocol records the independent reader impression `o` **before** revealing AI, followed by the AI proposal `a` (if shown) and final reader decision `f`. Every [`FeedbackEvent`](radagent/readers/feedback.py) can retain the reader/case IDs, probability, uncertainty, shown/deferred status, action (`accept`, `edit`, `reject`, `manual`), impression, final label and versioned session/audit context.
+
+**Why record `o`?** Without a pre-AI impression, one cannot distinguish a reader who **already agreed** from one who **changed their mind because of AI**. Neither the final label nor acceptance is automatically treated as ground truth; research correctness is checked against a reference annotation.
+
+For observed disagreements `o != a`, the learned **trust curve** is
+
+`Pr(reader follows AI | disagreement, confidence c) = sigmoid(α_r + β_r·(c - 0.75))`.
+
+[`fit_trust_curve()`](radagent/policy.py) estimates `α_r` and `β_r` by **maximum a posteriori (MAP) logistic regression**, using independent Gaussian priors `α_r ~ N(0, 1.5²)` and `β_r ~ N(4, 3²)`. These priors reduce extreme estimates when there are only a few disagreements.
+
+A separate **lapse estimate** measures how frequently a reader changes a decision that initially agreed with the AI. With a `Beta(1,19)` prior, the posterior mean is `p_lapse = (k + 1)/(n_agree + 20)`, where `k` is the number of changes among `n_agree` displayed agreeing cases. The default prior mean is **0.05**. This simple parameter does not reliably distinguish justified reconsideration from inconsistency.
+
+**What is personalised?** The reader's **behavioural parameters and decision thresholds**, **not VISTA3D's pretrained weights**. The system does not fine-tune a neural network to each reader.
+
+### C. Learning to Defer: a reader-specific SHOW/DEFER policy
+
+For case `i` and reader `r`, [`ReaderPolicy.decide()`](radagent/policy.py) first checks technical QC and then calibrated entropy:
+
+```text
+if QC fails:                     DEFER (independent read)
+else if u_i >= d_r:              DEFER (independent read)
+else:                            SHOW suggested label a_i = 1[p_i >= t_r]
+                                 confidence c_i = p_i if a_i=1 else (1-p_i)
+```
+
+Here `t_r` is the reader-specific **suggestion threshold** and `d_r` the **uncertainty deferral cut-off**. `d_r=None` disables entropy-based deferral but **never** overrides a QC failure. Varying `t_r` changes the **displayed label**, not the underlying calibrated probability. Deferral means the **AI recommendation is withheld** and the reader continues an independent interpretation.
+
+[`fit_policy()`](radagent/policy.py) tests candidate `(t_r, d_r)` pairs by **model-based counterfactual expected-loss minimisation**. Given the independent initial impression `o_i`, suggestion `a_i`, and reference label `g_i` from a previously annotated calibration case, the model estimates the chance of accepting the AI as
+
+`q_ir = 1-p_lapse,r` if `o_i=a_i`, otherwise `q_ir = trust_r(c_i)`.
+
+For final decision `y`, the prototype diagnostic loss is:
+
+`L_diag(y,g) = 2·1[y=0,g=1] + 1·1[y=1,g=0]` (false negative = **2**, false positive = **1**).
+
+The policy optimisation adds a small review-burden cost (`λ=0.02`) with nominal action costs `accept=1`, `reject=2`, `edit=3`, `manual=4`:
+
+```text
+L_show  = q*L_diag(a,g) + (1-q)*L_diag(1-a,g)
+          + λ*(q*C_accept + (1-q)*C_reject)
+L_defer = L_diag(o,g) + λ*C_manual
+L(t,d)  = average over calibration cases:
+          defer(i,t,d)*L_defer + (1-defer(i,t,d))*L_show
+```
+
+The **`edit` cost is configurable but is not a distinct branch in the current expected-loss equation**. These weights are *illustrative research costs*, not empirically calibrated clinical harm or reading-time costs.
+
+Defaults include `t` in **0.10–0.90** (step **0.05**), `d` in `{None, 0.90, 0.80, ..., 0.30}`, a small shrinkage penalty towards the universal `t=0.5`, **at least 10** valid feedback events, and adoption only when improvement passes both a **0.005** floor and a paired-standard-error condition. A proposed policy is governed by UI approval/versioning and cannot silently replace a reader's current-session policy.
+
+**Counterfactual qualification:** this procedure replays candidate policies using pre-AI impressions, reference labels and an estimated behavioural model. It does **not** directly observe what the same radiologist would have done under every alternative policy. The expected loss is a **model-based estimate**, not measured clinical effectiveness.
+
+### D. Human–AI Evaluation: controlled simulated readers
+
+[`radagent/readers/profiles.py`](radagent/readers/profiles.py) implements three **parametric**, non-LLM simulated readers, deliberately varying the response to AI:
+
+| Profile | Behavioural hypothesis | Default `trust_k / trust_tau` | Lapse |
+|---|---|---|---|
+| **Reader A** | AI-reliant; often follows the suggestion | `8.0 / 0.55` | `0.02` |
+| **Reader B** | Sceptical; often retains an independent opinion | `6.0 / 0.97` | `0.02` |
+| **Reader C** | Less consistent reading and correction behaviour | `1.5 / 0.60` | `0.15` |
+
+An initial simulated impression uses reference tumour presence, lesion volume and lesion contrast to create varying case difficulty; the simulated response to AI uses a separate confidence-dependent trust mechanism. These profiles **are hand-specified hypotheses, not fitted models of actual radiologists**. Simulated `edit` events are behavioural labels; they do not mean a voxel-wise manual segmentation has been performed.
+
+A seeded **calibration/test split** separates policy estimation from evaluation. [`radagent/experiments.py`](radagent/experiments.py) reuses the same test cases and **common random draws** across comparison arms and repeats experiments across seeds (default **30**) to reduce Monte Carlo noise in paired comparisons. Feedback-count learning curves probe Q3; they do not by themselves prove a real-world sample-efficiency threshold.
 
 ## Dataset and label conventions
 
@@ -332,16 +451,38 @@ The YAML file only needs to override selected defaults. For reproducibility, pin
 
 ## Evaluation design
 
-The code and `notebooks/evaluation.ipynb` are organised around the following analyses:
+The report's **four primary policy arms** address the incremental scientific questions. The implementation includes a **fifth supplementary comparator** to isolate the role of universal deferral:
 
-- **Segmentation and measurements:** liver/tumour Dice and lesion-detection metrics against LiTS annotations; volumes and diameters are evaluated at original resolution.
-- **Case-level confidence:** raw versus calibrated metrics including Brier score, expected calibration error (ECE), negative log-likelihood (NLL), AUROC, reliability diagrams, and bootstrap intervals.
-- **Selective prediction:** relationship between uncertainty, retained-case coverage, and error.
-- **Worklist triage:** proportion of reference-positive cases surfaced as higher-priority cases are reviewed.
-- **Reader policies:** accuracy, sensitivity, specificity, weighted error, deferral rate, review burden, harmful acceptance, and over-reliance for simulated readers.
-- **Research questions:** whether adaptation reduces between-reader differences in AI benefit, whether deferral reduces harmful acceptance, and how much feedback is required before policy changes become beneficial and stable.
+| Policy | Suggestion threshold | Deferral rule | Purpose |
+|---|---|---|---|
+| `no_ai` | No AI suggestion | Independent reader interpretation | Human-only control |
+| `universal` | Shared `t=0.5` | QC failure only | Non-personalised AI baseline |
+| `reader_threshold` | Fitted per reader | QC failure only | Is personalised suggestion alone useful? |
+| `reader_threshold_defer` | Fitted per reader | QC + personalised entropy cut-off | Does reader-specific deferral add value? |
+| `universal_defer` | Shared `t=0.5` | QC + pooled-feedback entropy cut-off | **Supplementary code arm**, beyond the four primary arms in the report |
 
-The calibration split is used to select and fit the calibration mapping and collect simulated-reader burn-in feedback. Policies are then compared on the same test cases with common random draws, and the simulation is repeated across configured seeds. These are **simulated-reader experiments**, not a clinical reader study.
+**Primary paired comparisons:** `no_ai → universal` (overall effect of AI), `universal → reader_threshold` (personalisation), and `reader_threshold → reader_threshold_defer` (incremental value of deferral). `universal_defer` tests whether any benefit arises from **deferral itself** rather than personalising it.
+
+### Metrics and research endpoints
+
+The central endpoint is the **simulated reader's final decision**, `f_ir`, relative to LiTS reference tumour presence `g_i`:
+
+| Metric | Definition / interpretation |
+|---|---|
+| **Final reader accuracy** | `mean(1[f_ir = g_i])`; complemented by sensitivity and specificity |
+| **Weighted error** | `mean(2*FN + FP)` per case, using the same loss weights as policy fitting |
+| **Harmful acceptance rate (HAR)** | `#(shown incorrect AI suggestions accepted as the final label) / #all test cases` |
+| **Over-reliance** | `#(shown incorrect AI suggestions accepted) / #(shown incorrect AI suggestions)` |
+| **Deferral rate** | `#cases where the AI recommendation was withheld / #test cases` |
+| **Per-reader AI benefit** | `accuracy(reader, policy) - accuracy(reader, no_ai)` |
+| **Between-reader benefit spread** | `max_r(mean_seed benefit_r) - min_r(mean_seed benefit_r)` |
+| **Review burden** | Mean nominal action cost per case; **not measured elapsed reading time** |
+
+For **Q2**, HAR and over-reliance should be interpreted **together with accuracy and deferral**: suppressing every suggestion can trivially reduce exposure to incorrect advice while also foregoing helpful advice. Over-reliance is undefined when **no incorrect suggestion is displayed**. For **Q1**, a smaller benefit spread is meaningful only in the context of non-worsening overall reader benefit and error. For **Q3**, report learning curves against the actual feedback count and rates of adopting a personalised policy. **Q4 still requires a pilot with real radiologists**.
+
+Additional assessments cover segmentation Dice / measurements, case-level calibration (Brier, NLL, ECE, AUROC, reliability diagrams and bootstrap uncertainty), selective prediction / coverage, and rule-based worklist triage. They are useful **supporting diagnostics**, not substitutes for the human–AI endpoints.
+
+**Evidence status:** This repository contains an experimental design and simulation/evaluation code; neither the report nor this README provides verified numeric outcomes for Q1–Q4. Do not interpret hypothetical reader profiles, demonstration curves or chosen policy-cost weights as clinical findings. Calibration fitting and reader burn-in operate on `calib`, with comparisons on `test`; this prevents *policy-fitting* leakage between those two splits but **does not address overlap of LiTS with VISTA3D pretraining**.
 
 ### Critical evaluation caveat: LiTS overlap with VISTA3D training
 
@@ -370,7 +511,9 @@ pytest -q tests/test_core.py
 - **Pretraining overlap.** The evaluated LiTS data overlap with VISTA3D's documented training sources; use an external dataset for an independent model evaluation.
 - **Small single-dataset evaluation.** With 65 calibration and 66 test cases, uncertainty intervals can be wide and specificity estimates can depend on a small number of tumour-free cases.
 - **Coarse uncertainty estimate.** The default two-pass flip test-time augmentation is not an ensemble and does not capture all sources of model uncertainty.
-- **Simulated readers are hypotheses.** The three reader profiles are parametric simulations of different automation-bias behaviours, not substitutes for observed radiologist decisions.
+- **Simulated readers are hypotheses.** The three reader profiles are parametric simulations of different automation-bias behaviours, not substitutes for observed radiologist decisions. Their trust/lapse generating processes resemble the policy's fitted assumptions; simulation performance may overstate real-reader generalisation.
+- **Q4 remains open.** No pilot comparison against actual radiologist behaviour is reported; simulated reading performance cannot establish real-world human–AI benefit.
+- **Counterfactual and cost-model assumptions.** SHOW/DEFER outcomes depend on estimated trust/lapse and an assumed independent initial read. The false-negative/false-positive weights and action costs are demonstration settings rather than validated clinical utilities or reading times. Editing is not modelled as a separate outcome in expected-loss optimisation.
 - **No online model learning.** The project adapts decision policy candidates, not neural-network weights. Feedback must not be treated as a substitute for reference/consensus annotations.
 - **Prototype software.** Window/level presets, overlays, mobile layouts, and outputs are not validated for diagnostic displays or patient care.
 - **Incomplete setup in this branch.** The absent `radagent.data.lits` module and stale Colab references must be corrected before reproducing the complete pipeline.
@@ -383,6 +526,14 @@ Potential future work described by the project includes external CT validation, 
 2. **Pretrained checkpoint:** [MONAI/VISTA3D-HF on Hugging Face](https://huggingface.co/MONAI/VISTA3D-HF). Weights are downloaded and cached on first use unless a local checkpoint is configured.
 3. **LiTS17:** [Liver Tumor Segmentation Challenge dataset mirror — Part 1](https://www.kaggle.com/datasets/andrewmvd/liver-tumor-segmentation) and [Part 2](https://www.kaggle.com/datasets/andrewmvd/liver-tumor-segmentation-part-2).
 4. **Interface design:** [`docs/UX_DESIGN.md`](docs/UX_DESIGN.md) records the intended reading workflow, design rationale, failure handling and formative usability scenarios.
+
+5. **Heterogeneous radiologist benefit:** Yu et al., *Heterogeneity and predictors of the effects of AI assistance on radiologists*, Nature Medicine, 2024.
+6. **Human–AI complementarity:** Agarwal et al., *Combining human expertise with artificial intelligence: experimental evidence from radiology*, NBER Working Paper 31422, 2023.
+7. **Automation bias:** Dratsch et al., *Automation bias in mammography: the impact of artificial intelligence BI-RADS suggestions on reader performance*, Radiology, 2023.
+8. **Complementarity-driven deferral:** Dvijotham et al., *Enhancing the reliability and accuracy of AI-enabled diagnosis via complementarity-driven deferral to clinicians*, Nature Medicine, 2023.
+9. **Probability calibration:** Guo et al., *On calibration of modern neural networks*, ICML, 2017; Platt, *Probabilistic outputs for support vector machines*, 1999.
+10. **Learning to defer:** Madras, Pitassi and Zemel, *Predict responsibly: improving fairness and accuracy by learning to defer*, NeurIPS, 2018; Mozannar and Sontag, *Consistent estimators for learning to defer to an expert*, ICML, 2020.
+11. **Full research framing and bibliography:** [*Approaches towards Radiologist-Centered AI Agent* — ReaderAdapt-Liver.pdf](docs/paper/ReaderAdapt-Liver.pdf), Sections 1–6 and references [1]–[16].
 
 **Software licence:** this repository's code is distributed under the MIT License; see [`LICENSE`](LICENSE). The pretrained VISTA3D weights have a separate NVIDIA NCLS v1 licence described in the model adapter and are for **non-commercial research use only** under the terms noted by the project. The code licence does not override the model-weight licence or the dataset's terms. Review the applicable licences before redistributing weights or using the system in any commercial context.
 
