@@ -76,8 +76,6 @@ The questions below follow **Q1–Q4 of AIMA Project II**, as framed in the repo
 | **Q3 — Feedback efficiency** | How many independent reads / feedback events are needed before a new reader's policy offers stable benefit? | Burn-in / feedback-count learning curves and policy-adoption safeguards |
 | **Q4 — Sim-to-real validity** | Can simulated-reader responses predict how real radiologists would behave in a pilot study? | **Not yet established**; requires real-reader pilot and behavioural-model validation |
 
-The research emphasis is **human–AI complementarity**: the downstream outcome is the **reader's final decision**, not merely VISTA3D segmentation accuracy. The report provides the mathematical assumptions, policy descriptions and scientific framing; the code is a prototype implementation, **not an independent clinical study or a set of validated experimental results**.
-
 
 
 ## End-to-end workflow
